@@ -12,7 +12,7 @@ export const CreateWalletFlow = ({ onCancel }: CreateWalletFlowProps) => {
   const [mnemonicPhrase, setMnemonicPhrase] = useState<string>()
 
   const handleViewSecret = () => {
-    invoke('create_wallet')
+    invoke('create_new_wallet')
       .then((resp: any) => {
         // Handle the mnemonic, e.g., show it in the UI
         setMnemonicPhrase(resp)
