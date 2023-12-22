@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { CreateWalletWarning } from "./Warning";
 import { invoke } from "@tauri-apps/api/tauri";
 
@@ -9,15 +9,16 @@ interface CreateWalletFlowProps {
 export const CreateWalletFlow = ({ onCancel }: CreateWalletFlowProps) => {
   const [showWarning, setShowWarninig] = useState<boolean>(true)
   const [mnemonicPhrase, setMnemonicPhrase] = useState<string>()
-  const [showPasswordForm, setShowPasswordForm] = useState<boolean>(false)
-  const [password, setPassword] = useState<string>()
+  const [step, setStep] = useState<number>(0)
+  const [password, setPassword] = useState<string | undefined>(undefined)
+  const [walletName, setWalletName] = useState<string | undefined>(undefined)
 
-  const handleViewSecret = (password: string | undefined) => {
-    if (!password) return    
-    invoke('create_new_wallet', { password: password, name: "ss" })
+  const handleViewSecret = () => {
+    if (!password || !walletName) return    
+    invoke('create_new_wallet', { password: password, name: walletName })
       .then((resp: any) => {
         // Handle the mnemonic, e.g., show it in the UI
-        setShowPasswordForm(false)
+        setStep(3)
         setMnemonicPhrase(resp)
         // ... set the mnemonic in the state to display it
       })
@@ -28,34 +29,71 @@ export const CreateWalletFlow = ({ onCancel }: CreateWalletFlowProps) => {
   }
 
   const handleShowPasswordForm = () => {
-    setShowPasswordForm(true)
+    setStep(1)
     setShowWarninig(false)
+  }
+
+  const handleClose = () => {
+    setWalletName(undefined)
+    setPassword(undefined)
+    setStep(0)
+    onCancel()
   }
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center backdrop-blur-sm">
       <div className="bg-white dark:bg-gray-800 p-6 rounded-lg max-w-lg mx-auto text-center">
-        {showWarning && !mnemonicPhrase && (
+        {step == 0 && showWarning && !mnemonicPhrase && (
           <CreateWalletWarning onCancel={onCancel} onContinue={handleShowPasswordForm} />
         )}
-        {showPasswordForm && (
+        {step == 1 ? (
+          <>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+              Set a name
+            </h2>
+            <p className="flex flex-col items-center text-gray-600 dark:text-gray-300 mb-8 gap-6">
+              You can have multiple wallets, set a name for this one
+              <input
+                key="wallet_name"
+                className="w-2/5 p-2 rounded-lg text-black"
+                type="text" 
+                placeholder="Wallet name"
+                onChange={(e) => setWalletName(e.target.value)}
+              />
+            </p>
+            <button 
+              onClick={() => setStep(2)}
+              disabled={!walletName}
+              className="bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded disabled:bg-gray-600"
+            >
+              Continue
+            </button>
+          </>
+        ) : step == 2 && (
           <>
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
               Set a password
             </h2>
             <p className="flex flex-col items-center text-gray-600 dark:text-gray-300 mb-8 gap-6">
               This password is used to encrypt your key, we cannot help you recover it
-              <input className="w-2/5 p-2 rounded-lg text-black" type="password" placeholder="password" onChange={(e) => setPassword(e.target.value)}></input>
+                <input
+                  key="wallet_password"
+                  className="w-2/5 p-2 rounded-lg text-black"
+                  type="password"
+                  placeholder="password"
+                  onChange={(e) => setPassword(e.target.value)}
+                />
             </p>
             <button 
-              onClick={()=> handleViewSecret(password)}
-              className="bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded"
+              onClick={() => handleViewSecret()}
+              disabled={!password}  
+              className="bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded disabled:bg-gray-600"
             >
-              Reveal Secret
+              Continue
             </button>
           </>
         )}
-        {mnemonicPhrase && !showWarning && (
+        {step == 3 && mnemonicPhrase && !showWarning && (
           <>
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
               Your secret phrase
@@ -64,7 +102,7 @@ export const CreateWalletFlow = ({ onCancel }: CreateWalletFlowProps) => {
               {mnemonicPhrase || "Generating..."}
             </p>
             <button 
-              onClick={onCancel}
+              onClick={handleClose}
               className="bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded"
             >
               Go to dashboard
