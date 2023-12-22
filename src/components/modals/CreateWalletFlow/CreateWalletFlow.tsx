@@ -14,9 +14,8 @@ export const CreateWalletFlow = ({ onCancel }: CreateWalletFlowProps) => {
   const handleViewSecret = () => {
     invoke('create_wallet')
       .then((resp: any) => {
-        console.log(resp)
         // Handle the mnemonic, e.g., show it in the UI
-        setMnemonicPhrase("resp")
+        setMnemonicPhrase(resp)
         setShowSecret(true);
         setShowWarninig(false);
         // ... set the mnemonic in the state to display it
@@ -36,10 +35,10 @@ export const CreateWalletFlow = ({ onCancel }: CreateWalletFlowProps) => {
         {showSecret && !showWarning && (
           <>
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-              {mnemonicPhrase || "Generating..."}
+              Your secret phrase
             </h2>
             <p className="text-gray-600 dark:text-gray-300 mb-8">
-              secret phrase should go here
+              {mnemonicPhrase || "Generating..."}
             </p>
             <button 
               onClick={onCancel}

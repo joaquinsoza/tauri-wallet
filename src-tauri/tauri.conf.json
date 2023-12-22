@@ -29,8 +29,8 @@
         "icons/icon.icns",
         "icons/icon.ico"
       ],
-      "identifier": "com.tauri.dev",
-      "longDescription": "",
+      "identifier": "Altura",
+      "longDescription": "Altura Wallet",
       "macOS": {
         "entitlements": null,
         "exceptionDomain": "",
