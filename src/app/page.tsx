@@ -1,11 +1,12 @@
 'use client'
 
 import Image from 'next/image'
-import Greet from '../components/greet'
 import { useState } from 'react';
 import alturaLogo from '@/assets/alturaicon.webp'
 import { ButtonPrimary } from '@/components/buttons/ButtonPrimary';
 import { CreateWalletFlow } from '@/components/modals/CreateWalletFlow/CreateWalletFlow';
+import MainWalletSelector from '@/components/MainWalletSelector';
+import { openExternalLink } from '@/utils/tauri';
 
 export default function Home() {
   const [showCreateWalletFlow, setShowCreateWalletFlow] = useState(false);
@@ -20,39 +21,52 @@ export default function Home() {
   };
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-24">
-      <div className="z-10 max-w-5xl w-full items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30 items-center gap-4">
+    <main className='bg-gradient-to-br from-gray-900 to-blue-800 min-h-screen p-6 flex flex-col justify-between'>
+      <div className='text-center text-white mb-8'>
+        <div className='flex justify-center items-center gap-4'>
           <Image
             alt='alturanft'
             src={alturaLogo}
             width={50}
             height={50}
           />
-          Welcome Altura Wallet
-        </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:h-auto lg:w-auto lg:bg-none">
-          <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By <span className="font-mono font-bold cursor-pointer">coderipper</span>
-          </a>
+          <h1 className='text-4xl font-bold mb-2'>Altura Wallet</h1>
         </div>
-        <div className='flex justify-center items-center gap-10'>
-          <ButtonPrimary onClick={handleCreateWalletClick}>Create Wallet</ButtonPrimary>
-          <ButtonPrimary onClick={handleImportWalletClick}>Import Wallet</ButtonPrimary>
-        </div>
-        {showCreateWalletFlow && (
-          <CreateWalletFlow onCancel={() => setShowCreateWalletFlow(false)}/>
-        )}
+        <p className='font-light text-lg'>Select your wallet</p>
+      </div>
+        
+      <MainWalletSelector />
 
-        {showImportForm && (
-          <Greet />
-          // <ImportWalletForm onCancel={() => setShowImportForm(false)} />
-        )}
+      {showCreateWalletFlow && (
+        <CreateWalletFlow onCancel={() => setShowCreateWalletFlow(false)}/>
+      )}
+
+      {showImportForm && (
+        <>Import form</>
+        // <ImportWalletForm onCancel={() => setShowImportForm(false)} />
+      )}
+      
+      <div>
+        <div className='flex justify-center'>
+          <button
+            className='bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded-lg mx-2 transition-colors'
+            onClick={handleCreateWalletClick}
+          >
+            Create Wallet
+          </button>
+          <button
+            className='bg-pink-600 hover:bg-pink-700 text-white py-2 px-4 rounded-lg mx-2 transition-colors'
+            onClick={handleImportWalletClick}
+          >
+            Import Wallet
+          </button>
+        </div>
+        <p
+          className='font-mono font-bold cursor-pointer text-center text-xs mt-4'
+          onClick={() => openExternalLink('https://joaquinsoza.dev')}
+        >
+          By coderipper
+        </p>
       </div>
     </main>
   )

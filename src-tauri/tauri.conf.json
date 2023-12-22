@@ -3,7 +3,7 @@
   "build": {
     "beforeBuildCommand": "yarn build",
     "beforeDevCommand": "yarn dev",
-    "devPath": "http://localhost:3010",
+    "devPath": "http://localhost:3015",
     "distDir": "../out"
   },
   "package": {
@@ -12,7 +12,10 @@
   },
   "tauri": {
     "allowlist": {
-      "all": false
+      "all": false,
+      "shell": {
+        "open": true
+      }
     },
     "bundle": {
       "active": true,
