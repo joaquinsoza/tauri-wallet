@@ -1,9 +1,6 @@
 use ethers::{
     core::rand,
-    signers::{
-        coins_bip39::{English, Mnemonic},
-        MnemonicBuilder,
-    },
+    signers::coins_bip39::{English, Mnemonic},
 };
 use std::io;
 

@@ -1,8 +1,8 @@
 interface CreateWalletWarningProps {
   onCancel: () => void
-  onViewSecretPhrase: () => void
+  onContinue: () => void
 }
-export const CreateWalletWarning = ({ onCancel, onViewSecretPhrase }: CreateWalletWarningProps) => {
+export const CreateWalletWarning = ({ onCancel, onContinue }: CreateWalletWarningProps) => {
   return (
     <>
       <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
@@ -23,10 +23,10 @@ export const CreateWalletWarning = ({ onCancel, onViewSecretPhrase }: CreateWall
           Cancel
         </button>
         <button 
-          onClick={onViewSecretPhrase}
+          onClick={onContinue}
           className="bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded"
         >
-          View Secret Phrase
+          Set Password
         </button>
       </div>
     </>
