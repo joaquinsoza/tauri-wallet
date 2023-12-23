@@ -59,7 +59,7 @@
     "windows": [
       {
         "fullscreen": false,
-        "height": 600,
+        "height": 650,
         "resizable": true,
         "title": "Altura Wallet",
         "width": 800

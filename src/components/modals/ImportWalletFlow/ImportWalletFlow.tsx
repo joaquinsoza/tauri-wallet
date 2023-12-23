@@ -10,24 +10,28 @@ interface ImportWalletFlowProps {
 export const ImportWalletFlow = ({ onCancel }: ImportWalletFlowProps) => {
   const { setCurrentWallet } = useCurrentWallet()
   const [step, setStep] = useState<number>(0)
-  const [seedPhrase, setSeedPhrase] = useState<string>()
+  const [mnemonicPhrase, setMnemonicPhrase] = useState<string>()
+  const [walletName, setWalletName] = useState<string>()
   const [password, setPassword] = useState<string>()
   const [wrongPhrase, setWrongPhrase] = useState<boolean>()
-  
+  const [testText, setTestText] = useState<string>('')
+
   const handleImportWallet = () => {
-    if(!seedPhrase || !password) return
-    invoke<string>('import_wallet', { password: password, seed_phrase: seedPhrase })
-      .then((result: string) => {
-        const resultJson: PublicWalletInfo = JSON.parse(result)
-        setCurrentWallet(resultJson)
+    // if(!mnemonicPhrase || !password || !walletName) return
+    invoke<PublicWalletInfo>('import_wallet', { name: walletName, password: password, mnemonicPhrase })
+      .then((result: PublicWalletInfo) => {
+        setCurrentWallet(result as PublicWalletInfo)
+        clear()
+        onCancel()
       })
       .catch((error: any) => {
+        setTestText(String(error))
         setWrongPhrase(true)
       });
   }
 
   const clear = () => {
-    setSeedPhrase(undefined)
+    setMnemonicPhrase(undefined)
     setPassword(undefined)
     setWrongPhrase(false)
     setStep(0)
@@ -40,8 +44,8 @@ export const ImportWalletFlow = ({ onCancel }: ImportWalletFlowProps) => {
 
   const handleNextStep = () => {
     //TODO: Should verify if seed phrase is compatible
-    if (!seedPhrase) return
-    setStep(1)
+    if (!mnemonicPhrase) return
+    setStep(step+1)
   }
 
   return (
@@ -53,13 +57,13 @@ export const ImportWalletFlow = ({ onCancel }: ImportWalletFlowProps) => {
               Import your phrase
             </h2>
             <p className="flex flex-col items-center text-gray-600 dark:text-gray-300 mb-8 gap-6">
-              yout seed phrase will be encrypted by tour password
+              your seed phrase will be encrypted by tour password
               <input
                 key="seedphrase"
                 className="w-full p-2 rounded-lg text-black"
                 type="text" 
                 placeholder="seed phrase"
-                onChange={(e) => setSeedPhrase(e.target.value)}
+                onChange={(e) => setMnemonicPhrase(e.target.value)}
               />
             </p>
             <div className="flex justify-between items-center">
@@ -77,7 +81,38 @@ export const ImportWalletFlow = ({ onCancel }: ImportWalletFlowProps) => {
               </button>
             </div>
           </>
-        ) : step == 1 && !wrongPhrase && (
+        ) : step == 1 && !wrongPhrase ? (
+          <>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+              Set account name
+            </h2>
+            <p className="flex flex-col items-center text-gray-600 dark:text-gray-300 mb-8 gap-6">
+              This will be the name of your account
+                <input
+                  key="wallet_name"
+                  className="w-2/5 p-2 rounded-lg text-black"
+                  type="text"
+                  placeholder="name"
+                  onChange={(e) => setWalletName(e.target.value)}
+                />
+            </p>
+            <div className="flex justify-between items-center">
+              <button 
+                onClick={() => {setStep(step-1)}}
+                className="bg-transparent hover:bg-gray-200 text-gray-800 dark:text-white py-2 px-4 border border-gray-400 rounded shadow"
+              >
+                Back
+              </button>
+              <button 
+                onClick={handleNextStep}
+                disabled={!walletName}
+                className="bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded"
+              >
+                Continue
+              </button>
+            </div>
+          </>
+        ) : step == 2 && !wrongPhrase && (
           <>
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
               Set a password
@@ -94,10 +129,10 @@ export const ImportWalletFlow = ({ onCancel }: ImportWalletFlowProps) => {
             </p>
             <div className="flex justify-between items-center">
               <button 
-                onClick={handleCancel}
+                onClick={() => setStep(step-1)}
                 className="bg-transparent hover:bg-gray-200 text-gray-800 dark:text-white py-2 px-4 border border-gray-400 rounded shadow"
               >
-                Cancel
+                Back
               </button>
               <button 
                 onClick={handleImportWallet}
@@ -114,7 +149,7 @@ export const ImportWalletFlow = ({ onCancel }: ImportWalletFlowProps) => {
               Wrong Phrase
             </h2>
             <p className="flex flex-col items-center text-gray-600 dark:text-gray-300 mb-8 gap-6">
-              Your seed phrase is wrong
+              Your seed phrase is wrong {testText}
             </p>
             <button 
               onClick={clear}

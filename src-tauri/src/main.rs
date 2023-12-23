@@ -17,7 +17,8 @@ fn main() {
         .invoke_handler(tauri::generate_handler![
             login,
             create_new_wallet,
-            all_wallets
+            all_wallets,
+            import_wallet,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
@@ -86,6 +87,35 @@ fn all_wallets(app_handle: AppHandle) -> Result<String, String> {
         }
         Err(e) => {
             println!("Failed to list wallets: {}", e);
+            Err(e)
+        }
+    }
+}
+
+#[tauri::command]
+fn import_wallet(
+    app_handle: AppHandle,
+    name: &str,
+    password: &str,
+    mnemonic_phrase: String,
+) -> Result<utils::WalletInfoPublic, String> {
+    let app_dir = utils::get_app_dir(app_handle, Some(utils::Subdir::AlturaWallet))
+        .map_err(|e| e.to_string())?;
+
+    let encrypted_mnemonic = match utils::encrypt_mnemonic(mnemonic_phrase, password) {
+        Ok(encrypted) => encrypted,
+        Err(e) => return Err(format!("Encryption failed: {}", e)),
+    };
+
+    let uuid: String = match utils::store_wallet_info(app_dir.clone(), name, &encrypted_mnemonic) {
+        Ok(uuid) => uuid,
+        Err(e) => return Err(format!("Failed to store wallet info: {}", e)),
+    };
+
+    match utils::login_to_wallet(app_dir, &uuid, password) {
+        Ok(wallet_info) => Ok(wallet_info),
+        Err(e) => {
+            println!("Failed to login to wallet: {}", e);
             Err(e)
         }
     }
