@@ -6,18 +6,8 @@ import { chooseRandomIcon } from '@/utils/chooseRandomIcon';
 import { LoginModal } from './modals/LoginModal/LoginModal';
 import { PublicWalletInfo } from '@/interfaces/wallet';
 
-export default function MainWalletSelector() {
-  const [wallets, setWallets] = useState<PublicWalletInfo[]>();
+export default function MainWalletSelector({wallets}: {wallets: PublicWalletInfo[]}) {
   const [selectedWallet, setSelectedWallet] = useState<PublicWalletInfo | null>(null);
-
-  useEffect(() => {
-    invoke<string>('all_wallets')
-      .then((result: string) => {
-        const resultJson = JSON.parse(result)
-        setWallets(resultJson)
-      })
-      .catch(console.error)
-  }, [])
 
   if(!wallets) return
 

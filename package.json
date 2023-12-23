@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@ethersproject/address": "^5.7.0",
     "@tauri-apps/api": "^1.5.3",
     "next": "14.0.4",
     "react": "^18",
