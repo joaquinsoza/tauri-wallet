@@ -1,5 +1,6 @@
 import { useCurrentWallet } from "@/contexts/CurrentWalletContext";
 import { PublicWalletInfo } from "@/interfaces/wallet";
+import { loginIntoWallet } from "@/utils/tauri";
 import { invoke } from "@tauri-apps/api/tauri";
 import { useState } from "react";
 
@@ -14,13 +15,9 @@ export const LoginModal = ({ onCancel, selectedWallet }: LoginModalProps) => {
 
   const handleLoginSubmit = () => {
     if (!password) return    
-    invoke('login', { uuid: selectedWallet.uuid, password: password })
-      .then((resp: any) => {
-        setCurrentWallet(resp)
-      })
-      .catch((error: any) => {
-        console.error('Error creating wallet:', error);
-      });
+    loginIntoWallet(password, selectedWallet.uuid)
+      .then((resp: PublicWalletInfo | null) => setCurrentWallet(resp))
+      .catch((error) => console.log(error))
   }
 
   return (

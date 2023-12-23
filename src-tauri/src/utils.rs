@@ -65,7 +65,7 @@ pub fn store_wallet_info(
     app_dir: PathBuf,
     name: &str,
     encrypted_mnemonic: &str,
-) -> Result<(), String> {
+) -> Result<String, String> {
     // Generate a new UUID for the wallet
     let uuid = Uuid::new_v4().to_string();
 
@@ -81,7 +81,7 @@ pub fn store_wallet_info(
 
     serde_json::to_writer(file, &wallet_info).map_err(|e| e.to_string())?;
 
-    Ok(())
+    Ok(uuid)
 }
 
 pub fn list_wallets(app_dir: PathBuf) -> Result<Vec<WalletInfoPublic>, String> {

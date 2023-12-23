@@ -1,25 +1,31 @@
 import { useEffect, useState } from "react";
 import { CreateWalletWarning } from "./Warning";
 import { invoke } from "@tauri-apps/api/tauri";
+import { loginIntoWallet } from "@/utils/tauri";
+import { PublicWalletInfo, WalletCreationResponse } from "@/interfaces/wallet";
+import { useCurrentWallet } from "@/contexts/CurrentWalletContext";
 
 interface CreateWalletFlowProps { 
   onCancel: () => void
 }
 
 export const CreateWalletFlow = ({ onCancel }: CreateWalletFlowProps) => {
+  const {setCurrentWallet} = useCurrentWallet()
   const [showWarning, setShowWarninig] = useState<boolean>(true)
   const [mnemonicPhrase, setMnemonicPhrase] = useState<string>()
   const [step, setStep] = useState<number>(0)
   const [password, setPassword] = useState<string | undefined>(undefined)
   const [walletName, setWalletName] = useState<string | undefined>(undefined)
-
+  const [newUuid, setNewUuid] = useState<string | undefined>(undefined)
   const handleViewSecret = () => {
     if (!password || !walletName) return    
-    invoke('create_new_wallet', { password: password, name: walletName })
-      .then((resp: any) => {
+    invoke<string>('create_new_wallet', { password: password, name: walletName })
+      .then((result: string) => {
+        const resultJson: WalletCreationResponse = JSON.parse(result)
         // Handle the mnemonic, e.g., show it in the UI
         setStep(3)
-        setMnemonicPhrase(resp)
+        setMnemonicPhrase(resultJson.mnemonic)
+        setNewUuid(resultJson.uuid)
         // ... set the mnemonic in the state to display it
       })
       .catch((error: any) => {
@@ -38,6 +44,10 @@ export const CreateWalletFlow = ({ onCancel }: CreateWalletFlowProps) => {
     setPassword(undefined)
     setStep(0)
     onCancel()
+
+    loginIntoWallet(password!, newUuid!)
+      .then((resp: PublicWalletInfo | null) => setCurrentWallet(resp))
+      .catch((error) => console.log(error))
   }
 
   return (

@@ -3,3 +3,8 @@ export interface PublicWalletInfo {
   name: string;
   address?: string;
 }
+
+export interface WalletCreationResponse {
+  mnemonic: string;
+  uuid: string;
+}

@@ -1,8 +1,16 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+use serde::{Deserialize, Serialize};
 use tauri::AppHandle;
+
 mod ethers;
 mod utils;
+
+#[derive(Serialize, Deserialize)]
+pub struct WalletCreationResponse {
+    mnemonic: String,
+    uuid: String,
+}
 
 fn main() {
     tauri::Builder::default()
@@ -41,21 +49,25 @@ fn create_new_wallet(app_handle: AppHandle, password: &str, name: &str) -> Resul
 
     match mnemonic_result {
         Ok(mnemonic) => {
-            //Here should encrypt the mnemonic and store it in app_dir
-            let mnemonic_clone = mnemonic.clone();
-
-            let encrypted_mnemonic = match utils::encrypt_mnemonic(mnemonic, password) {
+            let encrypted_mnemonic = match utils::encrypt_mnemonic(mnemonic.clone(), password) {
                 Ok(encrypted) => encrypted,
-                Err(e) => panic!("Encryption failed: {}", e),
+                Err(e) => return Err(format!("Encryption failed: {}", e)),
             };
 
+            // Store wallet info and get the UUID
             match utils::store_wallet_info(app_dir, name, &encrypted_mnemonic) {
-                Ok(_) => println!("Wallet info stored successfully."),
-                Err(e) => println!("Failed to store wallet info: {}", e),
-            }
+                Ok(uuid) => {
+                    let response = WalletCreationResponse {
+                        mnemonic: mnemonic.clone(), // Return the unencrypted mnemonic to the frontend
+                        uuid,                       // The UUID returned from store_wallet_info
+                    };
 
-            // println!("encrypted mnemonic {}", encrypted_mnemonic);
-            Ok(mnemonic_clone) // Return phrase to frontend
+                    // Serialize the response into a JSON string
+                    serde_json::to_string(&response)
+                        .map_err(|e| format!("Failed to serialize response: {}", e))
+                }
+                Err(e) => Err(format!("Failed to store wallet info: {}", e)),
+            }
         }
         Err(e) => Err(format!("Failed to generate mnemonic: {}", e)),
     }

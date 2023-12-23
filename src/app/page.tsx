@@ -28,7 +28,7 @@ export default function Home() {
   )
 
   return (
-    <main className='bg-gradient-to-br from-gray-900 to-blue-800 min-h-screen p-6 flex flex-col justify-between'>
+    <main className='bg-gradient-to-b from-[#0D1B27] to-[#1B0D2B] min-h-screen p-6 flex flex-col justify-between'>
       <div className='text-center text-white mb-8'>
         <div className='flex justify-center items-center gap-4'>
           <Image
@@ -41,7 +41,24 @@ export default function Home() {
         </div>
         <p className='font-light text-lg'>Select your wallet</p>
       </div>
-        
+
+      <div className='h-full'>
+        <div className='flex justify-center'>
+          <button
+            className='bg-[#00BFFF] hover:bg-[#00BFFF]/80 text-white py-2 px-4 rounded-lg mx-2 transition-colors'
+            onClick={handleCreateWalletClick}
+          >
+            Create Wallet
+          </button>
+          <button
+            className='hover:bg-[#00BFFF] text-white py-2 px-4 rounded-lg mx-2 transition-colors border border-[#00BFFF]'
+            onClick={handleImportWalletClick}
+          >
+            Import Wallet
+          </button>
+        </div>
+      </div>
+
       <MainWalletSelector />
 
       {showCreateWalletFlow && (
@@ -53,28 +70,12 @@ export default function Home() {
         // <ImportWalletForm onCancel={() => setShowImportForm(false)} />
       )}
       
-      <div>
-        <div className='flex justify-center'>
-          <button
-            className='bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded-lg mx-2 transition-colors'
-            onClick={handleCreateWalletClick}
-          >
-            Create Wallet
-          </button>
-          <button
-            className='bg-pink-600 hover:bg-pink-700 text-white py-2 px-4 rounded-lg mx-2 transition-colors'
-            onClick={handleImportWalletClick}
-          >
-            Import Wallet
-          </button>
-        </div>
-        <p
-          className='font-mono font-bold cursor-pointer text-center text-xs mt-4'
-          onClick={() => openExternalLink('https://joaquinsoza.dev')}
-        >
-          By coderipper
-        </p>
-      </div>
+      <p
+        className='font-mono font-bold cursor-pointer text-center text-xs mt-4'
+        onClick={() => openExternalLink('https://joaquinsoza.dev')}
+      >
+        By coderipper
+      </p>
     </main>
   )
 }
