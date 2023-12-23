@@ -1,6 +1,6 @@
 import { useCurrentWallet } from "@/contexts/CurrentWalletContext";
 import { PublicWalletInfo } from "@/interfaces/wallet";
-import { invoke } from "@tauri-apps/api";
+import { invoke } from "@tauri-apps/api/tauri";
 import { useState } from "react";
 
 interface LoginModalProps { 
