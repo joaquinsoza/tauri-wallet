@@ -1,3 +1,4 @@
+use crate::ethers;
 use ring::{
     pbkdf2,
     rand::{SecureRandom, SystemRandom},
@@ -29,6 +30,7 @@ struct WalletInfo {
 pub struct WalletInfoPublic {
     uuid: String,
     name: String,
+    address: Option<String>,
 }
 
 //Gets the app directory + path from the enum
@@ -101,12 +103,48 @@ pub fn list_wallets(app_dir: PathBuf) -> Result<Vec<WalletInfoPublic>, String> {
             let wallet_info_public = WalletInfoPublic {
                 uuid: wallet_info.uuid,
                 name: wallet_info.name,
+                address: None,
             };
             wallets.push(wallet_info_public);
         }
     }
 
     Ok(wallets)
+}
+
+pub fn login_to_wallet(
+    app_dir: PathBuf,
+    uuid: &str,
+    password: &str,
+) -> Result<WalletInfoPublic, String> {
+    let wallets = list_wallets(app_dir.clone()).map_err(|e| e.to_string())?;
+    //TODO: Wallet address is being extracted from a string and this is not good... build_from_seed should return the wallet and not a string
+    if let Some(wallet_public_info) = wallets.iter().find(|info| info.uuid == uuid) {
+        let wallet_info_path = app_dir.join(format!("{}.json", uuid));
+        let contents = fs::read_to_string(&wallet_info_path).map_err(|e| e.to_string())?;
+        let wallet_info: WalletInfo = serde_json::from_str(&contents).map_err(|e| e.to_string())?;
+
+        let decrypted_mnemonic = decrypt_mnemonic(wallet_info.encrypted_mnemonic, password)
+            .map_err(|_| "Failed to decrypt mnemonic with provided password".to_string())?;
+
+        let address_result = ethers::build_from_seed(&decrypted_mnemonic)
+            .map_err(|e| format!("Failed to build wallet from seed: {}", e))?;
+
+        let address_start = address_result
+            .find("address: ")
+            .ok_or("Address not found in string")?
+            + "address: ".len();
+        let address_end = address_start + 42; // Ethereum addresses are 42 characters long (including the '0x' prefix)
+        let wallet_address = address_result[address_start..address_end].to_string();
+
+        Ok(WalletInfoPublic {
+            uuid: wallet_public_info.uuid.clone(),
+            name: wallet_public_info.name.clone(),
+            address: Some(wallet_address),
+        })
+    } else {
+        Err("Wallet not found".to_string())
+    }
 }
 
 //Encrypts the mnemonic phrase
@@ -156,4 +194,11 @@ pub fn encrypt_mnemonic(mnemonic: String, password: &str) -> Result<String, Box<
     // Ok(encode(&in_out))
 
     Ok(mnemonic)
+}
+
+//Dencrypts the mnemonic phrase
+//TODO: Implement decryption
+pub fn decrypt_mnemonic(encrypted_mnemonic: String, password: &str) -> Result<String, String> {
+    println!("{:?}", password);
+    Ok(encrypted_mnemonic)
 }

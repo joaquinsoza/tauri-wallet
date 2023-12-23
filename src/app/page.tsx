@@ -7,8 +7,11 @@ import { ButtonPrimary } from '@/components/buttons/ButtonPrimary';
 import { CreateWalletFlow } from '@/components/modals/CreateWalletFlow/CreateWalletFlow';
 import MainWalletSelector from '@/components/MainWalletSelector';
 import { openExternalLink } from '@/utils/tauri';
+import { useCurrentWallet } from '@/contexts/CurrentWalletContext';
+import { Dashboard } from '@/components/dashboard/Dashoboard';
 
 export default function Home() {
+  const {currentWallet} = useCurrentWallet()
   const [showCreateWalletFlow, setShowCreateWalletFlow] = useState(false);
   const [showImportForm, setShowImportForm] = useState(false);
 
@@ -19,6 +22,10 @@ export default function Home() {
   const handleImportWalletClick = () => {
     setShowImportForm(!showImportForm);
   };
+
+  if (currentWallet) return (
+    <Dashboard />
+  )
 
   return (
     <main className='bg-gradient-to-br from-gray-900 to-blue-800 min-h-screen p-6 flex flex-col justify-between'>

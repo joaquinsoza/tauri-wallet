@@ -7,7 +7,7 @@ mod utils;
 fn main() {
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
-            greet,
+            login,
             create_new_wallet,
             all_wallets
         ])
@@ -16,17 +16,21 @@ fn main() {
 }
 
 #[tauri::command]
-fn greet(app_handle: AppHandle, name: &str) -> Result<String, String> {
+fn login(
+    app_handle: tauri::AppHandle,
+    uuid: &str,
+    password: &str,
+) -> Result<utils::WalletInfoPublic, String> {
     let app_dir = utils::get_app_dir(app_handle, Some(utils::Subdir::AlturaWallet))
         .map_err(|e| e.to_string())?;
 
-    // If no error, continue with the rest of the code
-    println!("Directory is {:?}", app_dir);
-    Ok(format!(
-        "Hello, {}! Your app directory is {:?}",
-        name,
-        app_dir.display()
-    ))
+    match utils::login_to_wallet(app_dir, uuid, password) {
+        Ok(wallet_info) => Ok(wallet_info),
+        Err(e) => {
+            println!("Failed to login to wallet: {}", e);
+            Err(e)
+        }
+    }
 }
 
 #[tauri::command]

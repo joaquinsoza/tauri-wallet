@@ -1,6 +1,9 @@
 use ethers::{
     core::rand,
-    signers::coins_bip39::{English, Mnemonic},
+    signers::{
+        coins_bip39::{English, Mnemonic},
+        MnemonicBuilder,
+    },
 };
 use std::io;
 
@@ -21,4 +24,10 @@ pub fn generate_mnemonic() -> Result<String, io::Error> {
 
     // Return or handle the wallet
     Ok(phrase)
+}
+
+pub fn build_from_seed(phrase: &str) -> Result<String, io::Error> {
+    let wallet = MnemonicBuilder::<English>::default().phrase(phrase).build();
+    //TODO: It should return the wallet and not a string
+    Ok(format!("{wallet:?}"))
 }
