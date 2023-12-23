@@ -11,6 +11,7 @@ import { useCurrentWallet } from '@/contexts/CurrentWalletContext';
 import { Dashboard } from '@/components/dashboard/Dashoboard';
 import { PublicWalletInfo } from '@/interfaces/wallet';
 import { invoke } from '@tauri-apps/api/tauri';
+import { ImportWalletFlow } from '@/components/modals/ImportWalletFlow/ImportWalletFlow';
 
 export default function Home() {
   const {currentWallet} = useCurrentWallet()
@@ -64,8 +65,7 @@ export default function Home() {
       )}
 
       {showImportForm && (
-        <>Import form</>
-        // <ImportWalletForm onCancel={() => setShowImportForm(false)} />
+        <ImportWalletFlow onCancel={() => setShowImportForm(false)} />
       )}
 
       <div className='h-full'>
