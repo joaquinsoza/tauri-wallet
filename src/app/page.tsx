@@ -12,6 +12,7 @@ import { Dashboard } from '@/components/dashboard/Dashoboard';
 import { PublicWalletInfo } from '@/interfaces/wallet';
 import { invoke } from '@tauri-apps/api/tauri';
 import { ImportWalletFlow } from '@/components/modals/ImportWalletFlow/ImportWalletFlow';
+import { EthereumProvider } from '@/contexts/EthereumContext';
 
 export default function Home() {
   const {currentWallet} = useCurrentWallet()
@@ -38,7 +39,9 @@ export default function Home() {
   };
 
   if (currentWallet) return (
-    <Dashboard />
+    <EthereumProvider>
+      <Dashboard />
+    </EthereumProvider>
   )
 
   return (

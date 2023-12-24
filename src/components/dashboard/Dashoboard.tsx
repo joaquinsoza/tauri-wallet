@@ -3,9 +3,14 @@ import ProfileCover from "@/assets/profileCover.svg"
 import Image from "next/image"
 import { chooseRandomIcon } from "@/utils/chooseRandomIcon"
 import { shortenAddress } from "@/utils/addresses"
+import { useEthereum } from "@/contexts/EthereumContext"
+import { useEffect, useState } from "react"
+import { Network } from "ethers"
 
 export const Dashboard = () => {
   const { currentWallet, setCurrentWallet } = useCurrentWallet()
+  const { blockNumber, balance, provider } = useEthereum()
+  const [profileIcon, setProfileIcon] = useState<string>('');
 
   const handleCopyAddress = async () => {
     if(!currentWallet?.address) return
@@ -21,17 +26,31 @@ export const Dashboard = () => {
     setCurrentWallet(null)
   }
 
+  useEffect(() => {
+    setProfileIcon(chooseRandomIcon());
+  }, []); 
+
+  const [currentNetwork, setCurrentNetwork] = useState<Network | undefined>()
+  useEffect(() => {
+    const getCurrentNetwork = async () => {
+      const network = await provider?.getNetwork()
+      setCurrentNetwork(network)
+    }
+    getCurrentNetwork()
+  }, [provider])
+
   return (
-    <div className="flex flex-col items-center">
+    <div className="flex flex-col items-center gap-3">
       <Image
+        className="absolute z-0 top-0 left-0"
         alt="profile_cover"
         src={ProfileCover}
       />
       <div
-        className="-mt-12 flex flex-col justify-center items-center"
+        className="flex flex-col justify-center items-center z-10"
       >
         <Image
-          src={chooseRandomIcon()}
+          src={profileIcon}
           alt="profileIcon"
           width={96}
           height={96}
@@ -58,15 +77,20 @@ export const Dashboard = () => {
         </div>
       </div>
 
-      {/* <div className="bg-red-400 p-4">
-        {currentWallet?.address}
+      <div className="w-full bg-red-950 h-full p-10">
+        Balance: {balance}
       </div>
-      <div className="bg-red-600 p-4">
-        {currentWallet?.name}
+
+      <div className="absolute bottom-0 w-full bg-purple-950 flex justify-between px-2">
+        <div>
+          {currentNetwork?.name}
+        </div>
+        {blockNumber !== null ? (
+          <p>{blockNumber}</p>
+        ) : (
+          <p>Loading...</p>
+        )}
       </div>
-      <div className="bg-red-800 p-4">
-        {currentWallet?.uuid}
-      </div> */}
     </div>
   )
 }
