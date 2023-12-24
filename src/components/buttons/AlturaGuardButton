@@ -1,7 +1,0 @@
-<button
-  className="h-auto py-2 bg-slate-200 rounded-3xl p-3"
-  type="button"
-  title=""
->
-  <span className="text-black"> Altura Guard </span>
-</button>

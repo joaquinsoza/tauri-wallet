@@ -19,6 +19,7 @@ fn main() {
             create_new_wallet,
             all_wallets,
             import_wallet,
+            sign_and_send_transaction,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
@@ -119,4 +120,25 @@ fn import_wallet(
             Err(e)
         }
     }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Transaction {
+    uuid: String,
+    to: String,
+    amount: String, // or use ethers::core::types::U256 if you want to handle it as a numeric type
+}
+
+#[tauri::command]
+fn sign_and_send_transaction(password: &str, transaction: String) -> Result<String, String> {
+    println!("{:?}", password);
+
+    // Deserialize the JSON string back into a Transaction struct
+    let txn: Transaction = serde_json::from_str(&transaction).map_err(|e| e.to_string())?;
+
+    println!("{:?}", txn);
+
+    // ... code to sign and send the transaction ...
+
+    Ok(format!("GG"))
 }

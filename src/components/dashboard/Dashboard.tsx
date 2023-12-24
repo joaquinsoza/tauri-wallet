@@ -1,10 +1,22 @@
 import { useState } from "react"
 import { DashboardLayout } from "./Layout"
+import { useCurrentWallet } from "@/contexts/CurrentWalletContext"
+import { invoke } from "@tauri-apps/api/tauri"
+import { useEthereum } from "@/contexts/EthereumContext"
+import { isAddress, parseEther } from "ethers"
 
 export const Dashboard = () => {
+  const { currentWallet } = useCurrentWallet()
+  const { balance, provider } = useEthereum()
   const [showSettings, setShowSettings] = useState<boolean>(false)
   const [showSend, setShowSend] = useState<boolean>(true)
   const [showAlturaGuard, setShowAlturaGuard] = useState<boolean>(false)
+
+  const [toAddress, setToAddress] = useState<string>()
+  const [toAmount, setToAmount] = useState<string>()
+
+  const [errorMessage, setErrorMessage] = useState<string>()
+  const [message, setMessage] = useState<string>()
 
   const handleMenu = (menuSelected: string) => {
 
@@ -31,6 +43,41 @@ export const Dashboard = () => {
         break;
     }
 
+  }
+
+  const handleSendEth = (password: string) => {
+    setErrorMessage(undefined)
+    try {
+      if (!isAddress(toAddress as string)) throw "Address is not valid"
+      if (Number(toAmount) <= 0 || !toAmount) throw "Amount not provided"
+      if (Number(balance) < Number(toAmount)) throw "Amount is higher than balance"
+      if (!password) throw "Needs password"
+      
+      // Create a transaction object
+      const txn = {
+        uuid: currentWallet?.uuid,
+        to: toAddress,
+        amount: parseEther(toAmount).toString()
+      };
+
+      invoke<string>('sign_and_send_transaction', { password: password, transaction: JSON.stringify(txn) })
+        .then((result: string) => {
+          //Should receive the hash of the submitted transaction
+          // setMessage(result as string)
+          console.log(result)
+        })
+        .catch((error: any) => {
+          // If the error is an Error object, use its message property
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          setErrorMessage(errorMessage);
+          console.error('Error signing transaction:', errorMessage);
+        });
+      
+    } catch (error) {
+      // If the error is not a string already, convert it to string
+      const errorMessage = typeof error === 'string' ? error : String(error);
+      setErrorMessage(errorMessage);
+    }
   }
 
   return (
@@ -77,22 +124,25 @@ export const Dashboard = () => {
               className="w-2/5 p-2 rounded-lg text-black"
               type="text" 
               placeholder="Address"
-              // onChange={(e) => setWalletName(e.target.value)}
+              onChange={(e) => setToAddress(e.target.value)}
             />
             <input
               key="to_address"
               className="w-2/5 p-2 rounded-lg text-black"
               type="number"
               placeholder="Amount"
-              // onChange={(e) => setWalletName(e.target.value)}
+              onChange={(e) => setToAmount(e.target.value)}
             />
             <button
               key="send_submit"
               type="submit"
+              onClick={() => handleSendEth("password")}
               className="w-2/5 p-2 rounded-lg bg-purple-900 hover:bg-purple-950"
             >
               Send
             </button>
+            {errorMessage}
+            {message}
           </>
         )}
         
