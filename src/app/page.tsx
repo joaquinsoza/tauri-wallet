@@ -8,7 +8,7 @@ import { CreateWalletFlow } from '@/components/modals/CreateWalletFlow/CreateWal
 import MainWalletSelector from '@/components/MainWalletSelector';
 import { openExternalLink } from '@/utils/tauri';
 import { useCurrentWallet } from '@/contexts/CurrentWalletContext';
-import { Dashboard } from '@/components/dashboard/Dashoboard';
+import { Dashboard } from '@/components/dashboard/Dashboard';
 import { PublicWalletInfo } from '@/interfaces/wallet';
 import { invoke } from '@tauri-apps/api/tauri';
 import { ImportWalletFlow } from '@/components/modals/ImportWalletFlow/ImportWalletFlow';
