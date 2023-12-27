@@ -54,6 +54,16 @@ yarn tauri dev
 
 This will launch the Wallet application with hot-reload enabled, allowing you to see real-time changes as you develop.
 
+## Building the Application
+
+To build the application, use the following command:
+
+```bash
+yarn tauri build
+```
+
+This will build the application.
+
 ---
 
 Note: The wallet is only working in Goerli network. to use in other networks you would need to manually change the chain_id and rpc urls in the files needed
