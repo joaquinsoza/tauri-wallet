@@ -5,6 +5,7 @@ import { invoke } from "@tauri-apps/api/tauri"
 import { useEthereum } from "@/contexts/EthereumContext"
 import { isAddress, parseEther } from "ethers"
 import { openExternalLink } from "@/utils/tauri"
+import { PasswordInputModal } from "../modals/PasswordInputModal"
 
 export const Dashboard = () => {
   const { currentWallet } = useCurrentWallet()
@@ -18,6 +19,8 @@ export const Dashboard = () => {
 
   const [errorMessage, setErrorMessage] = useState<string>()
   const [txhash, setTxhash] = useState<string>()
+
+  const [showEnterPassword, setShowEnterPassword] = useState<boolean>(false)
 
   const handleMenu = (menuSelected: string) => {
 
@@ -66,8 +69,6 @@ export const Dashboard = () => {
         .then((result: string) => {
           //Should receive the hash of the submitted transaction
           setTxhash(result)
-          setToAddress(undefined)
-          setToAmount(undefined)
           console.log(result)
         })
         .catch((error: any) => {
@@ -76,6 +77,21 @@ export const Dashboard = () => {
           setErrorMessage(errorMessage);
           console.error('Error signing transaction:', errorMessage);
         });
+      
+    } catch (error) {
+      // If the error is not a string already, convert it to string
+      const errorMessage = typeof error === 'string' ? error : String(error);
+      setErrorMessage(errorMessage);
+    }
+  }
+
+  const handleShowPasswordInput = () => {
+    setErrorMessage(undefined)
+    try {
+      if (!isAddress(toAddress as string)) throw "Address is not valid"
+      if (Number(toAmount) <= 0 || !toAmount) throw "Amount not provided"
+      if (Number(balance) < Number(toAmount)) throw "Amount is higher than balance"
+      setShowEnterPassword(true)
       
     } catch (error) {
       // If the error is not a string already, convert it to string
@@ -131,7 +147,7 @@ export const Dashboard = () => {
               onChange={(e) => setToAddress(e.target.value)}
             />
             <input
-              key="to_address"
+              key="to_amount"
               className="w-2/5 p-2 rounded-lg text-black"
               type="number"
               placeholder="Amount"
@@ -140,7 +156,7 @@ export const Dashboard = () => {
             <button
               key="send_submit"
               type="submit"
-              onClick={() => handleSendEth("password")}
+              onClick={handleShowPasswordInput}
               className="w-2/5 p-2 rounded-lg bg-purple-900 hover:bg-purple-950"
             >
               Send
@@ -163,6 +179,13 @@ export const Dashboard = () => {
           <>
             <h5 className="text-2xl font-semibold">Settings</h5>
           </>
+        )}
+
+        {showEnterPassword && (
+          <PasswordInputModal
+            onCancel={() => setShowEnterPassword(false)}
+            onContinue={handleSendEth}
+          />
         )}
 
       </div>

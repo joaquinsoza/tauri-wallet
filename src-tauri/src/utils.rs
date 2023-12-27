@@ -1,7 +1,8 @@
 use crate::ethers;
+use base64::{decode, encode};
 use ring::{
-    pbkdf2,
-    rand::{SecureRandom, SystemRandom},
+    aead, pbkdf2,
+    rand::{self, SecureRandom},
 };
 use serde::{Deserialize, Serialize};
 use serde_json;
@@ -140,7 +141,7 @@ pub fn login_to_wallet(
         let wallet_info: WalletInfo = serde_json::from_str(&contents).map_err(|e| e.to_string())?;
 
         let decrypted_mnemonic = decrypt_mnemonic(wallet_info.encrypted_mnemonic, password)
-            .map_err(|_| "Failed to decrypt mnemonic with provided password".to_string())?;
+            .map_err(|_| "Wrong password".to_string())?;
 
         let address_result = ethers::build_from_seed(&decrypted_mnemonic)
             .map_err(|e| format!("Failed to build wallet from seed: {}", e))?;
@@ -163,57 +164,75 @@ pub fn login_to_wallet(
 }
 
 //Encrypts the mnemonic phrase
+const SALT: &[u8] = b"unique_salt"; // Use a unique salt for each user
+const KEY_LEN: usize = 32; // AES-256 key length
+const NONCE_LEN: usize = 12; // Nonce length for AES-GCM
+
 pub fn encrypt_mnemonic(mnemonic: String, password: &str) -> Result<String, Box<dyn Error>> {
-    static PBKDF2_ALG: pbkdf2::Algorithm = pbkdf2::PBKDF2_HMAC_SHA256;
-    const SALT: &[u8] = b"unique_salt"; // Use a unique salt for each user
-    const KEY_LEN: usize = 32; // AES-256 key length
-    let pbkdf2_iterations = NonZeroU32::new(100_000).expect("Invalid iteration count");
-    // const NONCE_LEN: usize = 12; // Nonce length for AES-GCM
-    // println!("NONCE_LEN {:?}", NONCE_LEN);
-
-    // println!("{mnemonic:?}");
-    // println!("{password:?}");
-
+    // Create a PBKDF2 key from the password
     let mut key = [0u8; KEY_LEN];
-    println!("key {:?}", key);
-
+    let pbkdf2_iterations = NonZeroU32::new(100_000).unwrap();
     pbkdf2::derive(
-        PBKDF2_ALG,
+        pbkdf2::PBKDF2_HMAC_SHA256,
         pbkdf2_iterations,
         SALT,
         password.as_bytes(),
         &mut key,
     );
 
-    // let sealing_key = aead::UnboundKey::new(&aead::AES_256_GCM, &key);
-    // println!("sealing key {:?}", sealing_key);
-    // Create an instance of SystemRandom
-    let rng = SystemRandom::new();
+    let rng = rand::SystemRandom::new();
+    let mut nonce = [0u8; NONCE_LEN];
+    rng.fill(&mut nonce);
 
-    // Generate a nonce using SystemRandom
-    let mut nonce = [0u8; 12]; // Size of nonce for AES-GCM
-    rng.fill(&mut nonce).map_err(|e| e.to_string())?;
-
+    // Prepare the data for encryption
     let mut in_out = mnemonic.as_bytes().to_vec();
-    in_out.extend_from_slice(nonce.as_ref());
 
-    //TODO: Finish encryption
-    // aead::seal_in_place_append_tag(
-    //     &sealing_key,
-    //     nonce,
-    //     aead::Aad::empty(),
-    //     &mut in_out,
-    //     aead::MAX_TAG_LEN,
-    // )?;
+    let unbound_sealing_key =
+        aead::UnboundKey::new(&aead::AES_256_GCM, &key).map_err(|e| e.to_string())?;
+    let sealing_key = aead::LessSafeKey::new(unbound_sealing_key);
 
-    // Ok(encode(&in_out))
+    // let mut in_out = mnemonic.as_bytes().to_vec();
+    // in_out.extend_from_slice(&[0; aead::MAX_TAG_LEN]);
 
-    Ok(mnemonic)
+    sealing_key.seal_in_place_append_tag(
+        aead::Nonce::assume_unique_for_key(nonce),
+        aead::Aad::empty(),
+        &mut in_out,
+    );
+
+    let mut result = nonce.to_vec();
+    result.extend(in_out);
+    Ok(encode(&result))
 }
 
-//Dencrypts the mnemonic phrase
-//TODO: Implement decryption
 pub fn decrypt_mnemonic(encrypted_mnemonic: String, password: &str) -> Result<String, String> {
-    println!("{:?}", password);
-    Ok(encrypted_mnemonic)
+    let encrypted_data = decode(encrypted_mnemonic).map_err(|e| e.to_string())?;
+    if encrypted_data.len() < NONCE_LEN + aead::MAX_TAG_LEN {
+        return Err("Invalid encrypted data length".to_string());
+    }
+
+    let mut key = [0u8; KEY_LEN];
+    let pbkdf2_iterations = NonZeroU32::new(100_000).unwrap();
+    pbkdf2::derive(
+        pbkdf2::PBKDF2_HMAC_SHA256,
+        pbkdf2_iterations,
+        SALT,
+        password.as_bytes(),
+        &mut key,
+    );
+
+    let nonce = aead::Nonce::try_assume_unique_for_key(&encrypted_data[..NONCE_LEN])
+        .map_err(|_| "Failed to create nonce".to_string())?;
+    let encrypted_mnemonic = &encrypted_data[NONCE_LEN..];
+
+    let opening_key = aead::UnboundKey::new(&aead::AES_256_GCM, &key).map_err(|e| e.to_string())?;
+    let opening_key = aead::LessSafeKey::new(opening_key);
+
+    let mut in_out = encrypted_mnemonic.to_vec();
+    opening_key
+        .open_in_place(nonce, aead::Aad::empty(), &mut in_out)
+        .map_err(|e| format!("Failed to decrypt: {}", e))?;
+
+    in_out.truncate(in_out.len() - aead::MAX_TAG_LEN);
+    String::from_utf8(in_out).map_err(|e| e.to_string())
 }

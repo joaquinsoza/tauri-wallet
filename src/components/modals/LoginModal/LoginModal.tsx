@@ -12,12 +12,16 @@ interface LoginModalProps {
 export const LoginModal = ({ onCancel, selectedWallet }: LoginModalProps) => {
   const { setCurrentWallet } = useCurrentWallet()
   const [password, setPassword] = useState<string | undefined>(undefined)
+  const [errorMessage, setErrorMessage] = useState<string | undefined>(undefined)
 
   const handleLoginSubmit = () => {
     if (!password) return    
     loginIntoWallet(password, selectedWallet.uuid)
       .then((resp: PublicWalletInfo | null) => setCurrentWallet(resp))
-      .catch((error) => console.log(error))
+      .catch((error) => {
+        setErrorMessage(error as string)
+        console.log(error)
+      })
   }
 
   return (
@@ -47,6 +51,7 @@ export const LoginModal = ({ onCancel, selectedWallet }: LoginModalProps) => {
             Login
           </button>
         </div>
+        {errorMessage}
       </div>
     </div>
   );

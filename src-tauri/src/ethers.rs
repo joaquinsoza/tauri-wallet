@@ -74,7 +74,7 @@ pub async fn send_transaction(
 
     let decrypted_mnemonic =
         utils::decrypt_mnemonic(wallet_info.encrypted_mnemonic().to_string(), password)
-            .map_err(|_| "Failed to decrypt mnemonic with provided password".to_string())?;
+            .map_err(|_| "Wrong password".to_string())?;
 
     // Build wallet from mnemonic
     let wallet = MnemonicBuilder::<English>::default()

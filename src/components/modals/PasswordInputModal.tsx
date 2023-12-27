@@ -1,8 +1,24 @@
+import { useState } from "react"
+
 interface PasswordInputModalProps { 
   onCancel: () => void
+  onContinue: (password:string) => void
 }
 
-export const PasswordInputModal = ({ onCancel }: PasswordInputModalProps) => {
+export const PasswordInputModal = ({ onCancel, onContinue }: PasswordInputModalProps) => {
+  const [password, setPassword] = useState<string>()
+  const [errorMessage, setErrorMessage] = useState<string>()
+
+  const handleOnContinue = () => {
+    
+    try {
+      if (!password) throw "Please enter a password"
+      onContinue(password)
+      onCancel()
+    } catch (error) {
+      setErrorMessage(error as string)
+    }
+  }
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center backdrop-blur-sm">
@@ -15,7 +31,7 @@ export const PasswordInputModal = ({ onCancel }: PasswordInputModalProps) => {
           className="p-2 w-3/4 rounded-lg text-black"
           type="password" 
           placeholder="password"
-          // onChange={(e) => setPassword(e.target.value)}
+          onChange={(e) => setPassword(e.target.value)}
         />
         <div className="flex justify-between items-center gap-10">
           <button 
@@ -25,12 +41,13 @@ export const PasswordInputModal = ({ onCancel }: PasswordInputModalProps) => {
             Cancel
           </button>
           <button 
-            // onClick={handleLoginSubmit}
+            onClick={handleOnContinue}
             className="bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded"
           >
             Login
           </button>
         </div>
+        {errorMessage}
       </div>
     </div>
   );
