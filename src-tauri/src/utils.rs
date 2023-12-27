@@ -19,14 +19,29 @@ pub enum Subdir {
     // Add more as needed
 }
 
-#[derive(Serialize, Deserialize)]
-struct WalletInfo {
+#[derive(Debug, Serialize, Deserialize)]
+pub struct WalletInfo {
     uuid: String,
     name: String,
     encrypted_mnemonic: String,
 }
 
-#[derive(Serialize, Deserialize)]
+impl WalletInfo {
+    pub fn uuid(&self) -> &str {
+        &self.uuid
+    }
+
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+
+    pub fn encrypted_mnemonic(&self) -> &str {
+        &self.encrypted_mnemonic
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+
 pub struct WalletInfoPublic {
     uuid: String,
     name: String,

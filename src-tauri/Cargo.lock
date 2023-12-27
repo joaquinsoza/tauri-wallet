@@ -88,6 +88,7 @@ name = "app"
 version = "0.1.0"
 dependencies = [
  "base64 0.21.5",
+ "dotenv",
  "ethers",
  "ring 0.17.7",
  "serde",
@@ -953,6 +954,12 @@ name = "dispatch"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bd0c93bb4b0c6d9b77f4435b0ae98c24d17f1c45b2ff844c6151a07256ca923b"
+
+[[package]]
+name = "dotenv"
+version = "0.15.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "77c90badedccf4105eca100756a0b1289e191f6fcbdadd3cee1d2f614f97da8f"
 
 [[package]]
 name = "dtoa"
@@ -2839,7 +2846,7 @@ version = "0.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6c11e44798ad209ccdd91fc192f0526a369a01234f7373e1b141c96d7cee4f0e"
 dependencies = [
- "proc-macro-crate 1.3.1",
+ "proc-macro-crate 2.0.0",
  "proc-macro2",
  "quote",
  "syn 2.0.42",

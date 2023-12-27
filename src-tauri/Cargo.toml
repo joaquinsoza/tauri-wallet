@@ -22,6 +22,7 @@ ethers = { version = "2.0", features = ["abigen", "ws", "rustls"] }
 ring = "0.17.7"
 base64 = "0.21.5"
 uuid = "1.6.1"
+dotenv = "0.15.0"
 
 [features]
 # this feature is used for production builds or when `devPath` points to the filesystem and the built-in dev server is disabled.

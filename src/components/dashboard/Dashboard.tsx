@@ -4,6 +4,7 @@ import { useCurrentWallet } from "@/contexts/CurrentWalletContext"
 import { invoke } from "@tauri-apps/api/tauri"
 import { useEthereum } from "@/contexts/EthereumContext"
 import { isAddress, parseEther } from "ethers"
+import { openExternalLink } from "@/utils/tauri"
 
 export const Dashboard = () => {
   const { currentWallet } = useCurrentWallet()
@@ -16,7 +17,7 @@ export const Dashboard = () => {
   const [toAmount, setToAmount] = useState<string>()
 
   const [errorMessage, setErrorMessage] = useState<string>()
-  const [message, setMessage] = useState<string>()
+  const [txhash, setTxhash] = useState<string>()
 
   const handleMenu = (menuSelected: string) => {
 
@@ -57,13 +58,16 @@ export const Dashboard = () => {
       const txn = {
         uuid: currentWallet?.uuid,
         to: toAddress,
+        from: currentWallet?.address,
         amount: parseEther(toAmount).toString()
       };
 
       invoke<string>('sign_and_send_transaction', { password: password, transaction: JSON.stringify(txn) })
         .then((result: string) => {
           //Should receive the hash of the submitted transaction
-          // setMessage(result as string)
+          setTxhash(result)
+          setToAddress(undefined)
+          setToAmount(undefined)
           console.log(result)
         })
         .catch((error: any) => {
@@ -142,7 +146,16 @@ export const Dashboard = () => {
               Send
             </button>
             {errorMessage}
-            {message}
+            {txhash && (
+              <p
+                className='font-bold cursor-pointer text-center'
+                onClick={() => openExternalLink(`https://goerli.etherscan.io/tx/${txhash}`)}
+              >
+                Hash:
+                {' '}
+                {txhash}
+              </p>
+            )}
           </>
         )}
         

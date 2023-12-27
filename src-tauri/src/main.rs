@@ -1,5 +1,6 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+use ::ethers::types::TxHash;
 use serde::{Deserialize, Serialize};
 use tauri::AppHandle;
 
@@ -122,23 +123,22 @@ fn import_wallet(
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-pub struct Transaction {
-    uuid: String,
-    to: String,
-    amount: String, // or use ethers::core::types::U256 if you want to handle it as a numeric type
-}
-
 #[tauri::command]
-fn sign_and_send_transaction(password: &str, transaction: String) -> Result<String, String> {
-    println!("{:?}", password);
-
+async fn sign_and_send_transaction(
+    app_handle: AppHandle,
+    password: &str,
+    transaction: &str,
+) -> Result<TxHash, String> {
+    let app_dir = utils::get_app_dir(app_handle, Some(utils::Subdir::AlturaWallet))
+        .map_err(|e| e.to_string())?;
     // Deserialize the JSON string back into a Transaction struct
-    let txn: Transaction = serde_json::from_str(&transaction).map_err(|e| e.to_string())?;
+    let txn: ethers::Transaction = serde_json::from_str(&transaction).map_err(|e| e.to_string())?;
 
-    println!("{:?}", txn);
+    let tx_hash: TxHash = match ethers::send_transaction(app_dir.clone(), password, txn).await {
+        Ok(hash) => hash,
+        Err(e) => return Err(format!("Failed to sign transaction: {}", e)),
+    };
+    println!("Tx Hash: {:?}", tx_hash);
 
-    // ... code to sign and send the transaction ...
-
-    Ok(format!("GG"))
+    Ok(tx_hash)
 }
