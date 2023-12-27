@@ -2,6 +2,9 @@
 
 Ethereum wallet application developed using Tauri, a framework for building desktop applications with web frontends. It leverages the power of Rust for its backend operations and TypeScript with Next.js for its frontend.
 
+![Kapture 2023-12-27 at 03 42 52](https://github.com/joaquinsoza/tauri-wallet/assets/34905663/ed6a89d9-bf03-4fd5-b0df-bb217deec067)
+
+
 ## Features
 
 - Ethereum wallet creation and management
