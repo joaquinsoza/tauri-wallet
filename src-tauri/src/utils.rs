@@ -1,5 +1,5 @@
 use crate::ethers;
-use base64::{decode, encode};
+use base64::{engine::general_purpose, Engine as _};
 use ring::{
     aead, pbkdf2,
     rand::{self, SecureRandom},
@@ -28,11 +28,11 @@ pub struct WalletInfo {
 }
 
 impl WalletInfo {
-    pub fn uuid(&self) -> &str {
+    pub fn _uuid(&self) -> &str {
         &self.uuid
     }
 
-    pub fn name(&self) -> &str {
+    pub fn _name(&self) -> &str {
         &self.name
     }
 
@@ -182,7 +182,7 @@ pub fn encrypt_mnemonic(mnemonic: String, password: &str) -> Result<String, Box<
 
     let rng = rand::SystemRandom::new();
     let mut nonce = [0u8; NONCE_LEN];
-    rng.fill(&mut nonce);
+    let _ = rng.fill(&mut nonce);
 
     // Prepare the data for encryption
     let mut in_out = mnemonic.as_bytes().to_vec();
@@ -194,7 +194,7 @@ pub fn encrypt_mnemonic(mnemonic: String, password: &str) -> Result<String, Box<
     // let mut in_out = mnemonic.as_bytes().to_vec();
     // in_out.extend_from_slice(&[0; aead::MAX_TAG_LEN]);
 
-    sealing_key.seal_in_place_append_tag(
+    let _ = sealing_key.seal_in_place_append_tag(
         aead::Nonce::assume_unique_for_key(nonce),
         aead::Aad::empty(),
         &mut in_out,
@@ -202,11 +202,13 @@ pub fn encrypt_mnemonic(mnemonic: String, password: &str) -> Result<String, Box<
 
     let mut result = nonce.to_vec();
     result.extend(in_out);
-    Ok(encode(&result))
+    Ok(general_purpose::STANDARD.encode(&result))
 }
 
 pub fn decrypt_mnemonic(encrypted_mnemonic: String, password: &str) -> Result<String, String> {
-    let encrypted_data = decode(encrypted_mnemonic).map_err(|e| e.to_string())?;
+    let encrypted_data = general_purpose::STANDARD
+        .decode(encrypted_mnemonic)
+        .map_err(|e| e.to_string())?;
     if encrypted_data.len() < NONCE_LEN + aead::MAX_TAG_LEN {
         return Err("Invalid encrypted data length".to_string());
     }
